@@ -205,7 +205,7 @@ if st.session_state.show_all_modal:
                     st.markdown(f"""
                     <div style="background-color: #1e293b; border: 2px solid #334155; border-radius: 15px; padding: 30px 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.4);">
                         <p style="color: #94a3b8; font-size: 1rem; margin-bottom: 8px;">당첨 번호 #{w.get('draw_number', 1)}</p>
-                        <h1 style="color: white; font-size: 5.5rem; margin: 10px 0;">{w['name']}</h1>
+                        <h1 style="color: white; font-size: 4.5rem; margin: 10px 0;">{w['name']}</h1>
                         <p style="color: #facc15; font-size: 3.5rem; margin-top: 10px; font-weight: bold;">{w['id']}</p>
                         <p style="color: #64748b; font-size: 0.85rem; margin-top: 15px;">{w['time']}</p>
                     </div>
