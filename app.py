@@ -103,7 +103,7 @@ if uploaded_file is not None:
         cols = [str(c).strip().lower() for c in df.columns]
         
         name_idx = None
-        for key in ["이름", "성명", "name", "성명(한글)", "회원명"]:
+        for key in ["이름", "성명", "성함", "name", "성명(한글)", "회원명"]:
             if key in cols:
                 name_idx = list(df.columns)[cols.index(key)]
                 break
