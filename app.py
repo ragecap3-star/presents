@@ -7,7 +7,7 @@ from io import BytesIO
 
 # Page configuration
 st.set_page_config(
-    page_title="숫자 경품 추첨 프로그램",
+    page_title="경품 추첨 프로그램",
     page_icon="🎁",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -39,7 +39,7 @@ st.markdown("""
         text-align: center;
     }
     .winner-display {
-        font-size: 5rem;
+        font-size: 8rem;
         font-weight: 900;
         color: #ffffff;
         text-align: center;
@@ -49,6 +49,14 @@ st.markdown("""
         border: 2px solid #334155;
         margin: 30px 0;
         box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .winner-card {
+        background-color: #1e293b;
+        border: 2px solid #334155;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 15px;
     }
     /* 버튼 스타일 가독성 개선 */
     .stButton > button {
@@ -84,44 +92,55 @@ if "show_all_modal" not in st.session_state:
     st.session_state.show_all_modal = False
 if "all_winners_page" not in st.session_state:
     st.session_state.all_winners_page = 0
-if "max_number" not in st.session_state:
-    st.session_state.max_number = 50
 
 # Sidebar Controls
 st.sidebar.markdown("## ⚙️ 추첨 설정 및 제어")
 
-# 1. 엑셀 업로드 대신 숫자 범위 입력으로 변경
-max_num_input = st.sidebar.number_input("추첨 범위 (1부터 입력한 숫자까지)", min_value=1, max_value=10000, value=int(st.session_state.max_number), step=1)
-
-if st.sidebar.button("참가 번호 생성하기", use_container_width=True):
-    st.session_state.max_number = max_num_input
-    participants = []
-    # 소수점 방지를 위해 int()로 명시적 정수 처리
-    for i in range(1, int(max_num_input) + 1):
-        clean_i = int(i)
-        participants.append({"name": f"{clean_i}번", "id": f"NO. {clean_i}"})
-    
-    st.session_state.participants = participants
-    st.session_state.remaining = participants.copy()
-    st.session_state.winners = []
-    st.session_state.draw_group_no = 0
-    st.sidebar.success(f"1부터 {int(max_num_input)}까지 번호 생성 완료!")
-
-# 참가자가 비어있을 경우 자동 초기화
-if not st.session_state.participants:
-    participants = []
-    for i in range(1, int(st.session_state.max_number) + 1):
-        clean_i = int(i)
-        participants.append({"name": f"{clean_i}번", "id": f"NO. {clean_i}"})
-    st.session_state.participants = participants
-    st.session_state.remaining = participants.copy()
+uploaded_file = st.sidebar.file_uploader("참가자 엑셀 업로드 (.xlsx)", type=["xlsx"])
+if uploaded_file is not None:
+    try:
+        df = pd.read_excel(uploaded_file)
+        cols = [str(c).strip().lower() for c in df.columns]
+        
+        name_idx = None
+        for key in ["이름", "성명", "name", "성명(한글)", "회원명"]:
+            if key in cols:
+                name_idx = list(df.columns)[cols.index(key)]
+                break
+        if name_idx is None:
+            name_idx = df.columns[1] if len(df.columns) >= 2 else df.columns[0]
+            
+        id_idx = None
+        for key in ["면허번호", "id", "번호", "회원"]:
+            if key in cols and list(df.columns)[cols.index(key)] != name_idx:
+                id_idx = list(df.columns)[cols.index(key)]
+                break
+                
+        participants = []
+        for _, row in df.iterrows():
+            name = row[name_idx]
+            if pd.isna(name) or str(name).strip() == "":
+                continue
+            identifier = ""
+            if id_idx is not None and not pd.isna(row[id_idx]):
+                identifier = str(row[id_idx]).strip()
+            participants.append({"name": str(name).strip(), "id": identifier})
+            
+        if participants and st.sidebar.button("참가자 적용하기"):
+            st.session_state.participants = participants
+            st.session_state.remaining = participants.copy()
+            st.session_state.winners = []
+            st.session_state.draw_group_no = 0
+            st.sidebar.success(f"{len(participants)}명 불러오기 완료!")
+    except Exception as e:
+        st.sidebar.error(f"파일 읽기 오류: {e}")
 
 st.sidebar.markdown("---")
 st.session_state.prize_name = st.sidebar.text_input("경품명", value=st.session_state.prize_name)
 
 max_rem = len(st.session_state.remaining) if st.session_state.remaining else 1
 st.session_state.winner_count = st.sidebar.number_input(
-    "추첨 인원 수", min_value=1, max_value=max(1, max_rem), value=min(int(st.session_state.winner_count), max(1, max_rem))
+    "추첨 인원 수", min_value=1, max_value=max(1, max_rem), value=min(st.session_state.winner_count, max(1, max_rem))
 )
 
 st.sidebar.markdown("---")
@@ -186,7 +205,7 @@ if st.session_state.show_all_modal:
                     st.markdown(f"""
                     <div style="background-color: #1e293b; border: 2px solid #334155; border-radius: 15px; padding: 30px 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.4);">
                         <p style="color: #94a3b8; font-size: 1rem; margin-bottom: 8px;">당첨 번호 #{w.get('draw_number', 1)}</p>
-                        <h1 style="color: white; font-size: 4.5rem; margin: 10px 0; text-align: center; width: 100%;">{w['name']}</h1>
+                        <h1 style="color: white; font-size: 4.5rem; margin: 10px 0;">{w['name']}</h1>
                         <p style="color: #facc15; font-size: 3.5rem; margin-top: 10px; font-weight: bold;">{w['id']}</p>
                         <p style="color: #64748b; font-size: 0.85rem; margin-top: 15px;">{w['time']}</p>
                     </div>
@@ -201,7 +220,7 @@ else:
     # Main Header
     col_h1, col_h2 = st.columns([3, 1])
     with col_h1:
-        st.markdown('<p class="big-title">🎁 숫자 경 품 추 첨 프 로 그 램</p>', unsafe_allow_html=True)
+        st.markdown('<p class="big-title">🎁 경 품 추 첨 프 로 그 램</p>', unsafe_allow_html=True)
     with col_h2:
         total_p = len(st.session_state.participants)
         rem_p = len(st.session_state.remaining)
@@ -237,9 +256,9 @@ else:
     if start_clicked or redraw_clicked:
         is_redraw = redraw_clicked
         if not st.session_state.remaining:
-            st.warning("추첨할 번호가 없습니다. 사이드바에서 숫자를 다시 설정해 주세요.")
-        elif int(st.session_state.winner_count) > len(st.session_state.remaining):
-            st.warning("남은 번호 수보다 당첨 인원이 많습니다.")
+            st.warning("추첨할 참가자가 없습니다. 엑셀 파일을 먼저 불러오주세요.")
+        elif st.session_state.winner_count > len(st.session_state.remaining):
+            st.warning("남은 참가자 수보다 당첨 인원이 많습니다.")
         else:
             st.session_state.draw_group_no += 1
             group_no = st.session_state.draw_group_no
@@ -273,9 +292,7 @@ else:
                 
                 placeholder.markdown(f'<div class="winner-display">🎉 {winner["name"]} {winner["id"]} 🎉</div>', unsafe_allow_html=True)
                 status_placeholder.markdown(f'<p class="status-text">축하합니다! 당첨되었습니다.</p>', unsafe_allow_html=True)
-                
-                # 2. 당첨자 결정 후 정확히 2초 동안 화면에 머무르도록 설정
-                time.sleep(2.0)
+                time.sleep(2)
                 
             st.success(f"이번 추첨이 완료되었습니다! ({len(newly_drawn)}명 당첨)")
             st.rerun()
@@ -293,7 +310,7 @@ else:
     else:
         st.markdown("""
         <div style="background-color: #1e293b; padding: 40px; border-radius: 15px; text-align: center; border: 1px dashed #475569; margin-top: 20px;">
-            <h3 style="color: #94a3b8;">사이드바에서 숫자를 설정하고 [참가 번호 생성하기] 및 [추첨 START] 버튼을 눌러주세요!</h3>
+            <h3 style="color: #94a3b8;">엑셀 파일을 업로드하고 [추첨 START] 버튼을 눌러주세요!</h3>
         </div>
         """, unsafe_allow_html=True)
 
@@ -315,7 +332,7 @@ else:
         st.download_button(
             label="📥 당첨 결과 엑셀(XLSX)로 저장",
             data=excel_data,
-            file_name=f"숫자경품추첨결과_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+            file_name=f"경품추첨결과_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             use_container_width=True
         )
