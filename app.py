@@ -292,7 +292,7 @@ else:
                 
                 placeholder.markdown(f'<div class="winner-display">🎉 {winner["name"]} {winner["id"]} 🎉</div>', unsafe_allow_html=True)
                 status_placeholder.markdown(f'<p class="status-text">축하합니다! 당첨되었습니다.</p>', unsafe_allow_html=True)
-                time.sleep(1.5)
+                time.sleep(2.0)
                 
             st.success(f"이번 추첨이 완료되었습니다! ({len(newly_drawn)}명 당첨)")
             st.rerun()
