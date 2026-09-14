@@ -123,7 +123,19 @@ if uploaded_file is not None:
                 continue
             identifier = ""
             if id_idx is not None and not pd.isna(row[id_idx]):
-                identifier = str(row[id_idx]).strip()
+                raw_id = row[id_idx]
+                # 엑셀 숫자가 소수점(.0)으로 읽히는 현상 방지 처리
+                try:
+                    val = float(raw_id)
+                    if val.is_integer():
+                        identifier = str(int(val))
+                    else:
+                        identifier = str(raw_id).strip()
+                except ValueError:
+                    identifier = str(raw_id).strip()
+                    if identifier.endswith('.0'):
+                        identifier = identifier[:-2]
+                        
             participants.append({"name": str(name).strip(), "id": identifier})
             
         if participants and st.sidebar.button("참가자 적용하기"):
@@ -337,4 +349,5 @@ else:
             use_container_width=True
         )
     else:
+        st.info("아직 당첨자가 없습니다.")
         st.info("아직 당첨자가 없습니다.")
