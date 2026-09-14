@@ -62,7 +62,7 @@ st.markdown("""
     .stButton > button {
         background-color: #2563eb; /* 버튼 배경색 (파란 계열) */
         color: #ffffff !important;  /* 글자색을 흰색으로 강제 고정 */
-        font-size: 16px !important; /* 글자 크기 조절 */
+        font-size: 24px !important; /* 글자 크기 조절 */
         font-weight: bold;          /* 글자 굵기 */
     }
 
