@@ -39,7 +39,7 @@ st.markdown("""
         text-align: center;
     }
     .winner-display {
-        font-size: 4rem;
+        font-size: 15rem;
         font-weight: 900;
         color: #ffffff;
         text-align: center;
